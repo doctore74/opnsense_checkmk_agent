@@ -228,7 +228,8 @@ This plugin delivers the operating system view through the agent. For
 OPNsense-specific data, use the Checkmk special agent
 [**opnsense**](https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense),
 which queries the OPNsense REST API. Both work side by side on the same host.
-Wishes for data from the REST API belong there.
+Wishes for data from the REST API belong there. A wider comparison, including
+SNMP and the Bashclub agent, is in [docs/COMPARISON.md](docs/COMPARISON.md).
 
 | Data | This plugin (agent) | Special agent "opnsense" (✔ today, ➕ possible via API) |
 |---|---|---|
