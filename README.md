@@ -108,8 +108,8 @@ firewall (console or SSH, option 8 "Shell"):
 # dependencies from the OPNsense repository
 pkg install -y check_mk_agent socat
 
-# the plugin (example: 1.0-rc2 for OPNsense 26.7)
-fetch -o /tmp/os-checkmk-agent.pkg https://gitlab.thatsallmine.de/api/v4/projects/76/packages/generic/os-checkmk-agent/1.0-rc2/os-checkmk-agent-1.0-opnsense26.7.pkg
+# the plugin (example: 1.0-rc3 for OPNsense 26.7)
+fetch -o /tmp/os-checkmk-agent.pkg https://gitlab.thatsallmine.de/api/v4/projects/76/packages/generic/os-checkmk-agent/1.0-rc3/os-checkmk-agent-1.0-opnsense26.7.pkg
 sha256 /tmp/os-checkmk-agent.pkg      # compare with SHA256SUMS of the release
 pkg add /tmp/os-checkmk-agent.pkg
 rm /tmp/os-checkmk-agent.pkg
