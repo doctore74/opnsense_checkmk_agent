@@ -36,16 +36,19 @@ SECRET_FILE=/usr/local/etc/checkmkagent/secret
 # not an SSH session, even if the service was started from one
 unset SSH_CLIENT SSH_CONNECTION SSH_TTY
 
-line=$(grep '^secret=' "${SECRET_FILE}" 2>/dev/null)
-if [ -z "${line}" ]; then
-	exec ${AGENT}
-fi
-
 panic()
 {
 	printf '<<<check_mk>>>\nEncryptionPanic: true\n'
 	exit 1
 }
+
+# only the service (root) can read the secret; never fall back to plain text
+[ "$(id -u)" -eq 0 ] || panic
+
+line=$(grep '^secret=' "${SECRET_FILE}" 2>/dev/null)
+if [ -z "${line}" ]; then
+	exec ${AGENT}
+fi
 
 hex_decode()
 {
