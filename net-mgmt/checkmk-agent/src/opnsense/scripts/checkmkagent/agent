@@ -33,6 +33,9 @@
 AGENT=/usr/local/bin/check_mk_agent
 SECRET_FILE=/usr/local/etc/checkmkagent/secret
 
+# not an SSH session, even if the service was started from one
+unset SSH_CLIENT SSH_CONNECTION SSH_TTY
+
 line=$(grep '^secret=' "${SECRET_FILE}" 2>/dev/null)
 if [ -z "${line}" ]; then
 	exec ${AGENT}
