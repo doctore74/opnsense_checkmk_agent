@@ -90,3 +90,7 @@ plugin or the special agent is needed.
   The ➕ endpoints were looked up in the OPNsense 26.7 source, not queried.
 - **Bashclub:** from the source code of version 1.2.16 and the services it
   delivered on an OPNsense 26.1 firewall.
+
+## Disclaimer
+
+I did not develop this plugin officially as an employee of Checkmk GmbH, but rather as a private individual.

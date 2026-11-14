@@ -22,6 +22,9 @@ services, SMART), combine this plugin with the Checkmk special agent
 "opnsense":
 https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense
 
+I did not develop this plugin officially as an employee of Checkmk
+GmbH, but rather as a private individual.
+
 Documentation, screenshots and tested versions:
 
 WWW: https://gitlab.thatsallmine.de/checkmk1/opnsense_checkmk_agent
