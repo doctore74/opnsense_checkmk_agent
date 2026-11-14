@@ -20,6 +20,7 @@ labels that mark the host as OPNsense.
 - [Screenshots](#screenshots)
 - [Tested with](#tested-with)
 - [Setup](#setup)
+- [Manual installation](#manual-installation)
 - [Encryption](#encryption)
 - [Host labels](#host-labels)
 - [Query over SSH](#query-over-ssh)
@@ -76,17 +77,17 @@ Host labels set by the plugin, next to Checkmk's own labels:
 
 | Component | Version | Result |
 |---|---|---|
-| OPNsense | 26.7 (FreeBSD 15.1), `check_mk_agent` 2.5.0p15, `socat` 1.8.1.3 | install, enable/disable, reboot, upgrade, uninstall: OK (2026-11-14) |
+| OPNsense 26.7 | 26.7 (FreeBSD 15.1), `check_mk_agent` 2.5.0p15, `socat` 1.8.1.3 | install, enable/disable, reboot, upgrade, uninstall, encryption, SSH: OK (2026-11-14) |
+| OPNsense 26.1 | 26.1.11_10 (FreeBSD 14.3), `check_mk_agent` 2.4.0p20, `socat` 1.8.1.1 | manual installation from the release, agent queried by Checkmk 2.5.0p19: OK (2026-11-14, long-term test running) |
 | Checkmk 2.4 | `checkmk/check-mk-cloud:2.4.0p40` | discovery (26 services), decryption: OK (2026-11-14) |
 | Checkmk 2.5 | 2.5.0p19 Ultimate | 36 services OK in production monitoring, decryption, host labels: OK (2026-11-14) |
 | Checkmk 3.0 | `checkmk/check-mk-ultimate:3.0.0-2026.11.14` (daily) | discovery (26 services), decryption: OK (2026-11-14) |
 
-Not yet tested: OPNsense 26.1 (`check_mk_agent` 2.4.0p20).
-
 ## Setup
 
 1. Install the plugin under *System › Firmware › Plugins* (`os-checkmk-agent`).
-   `check_mk_agent` and `socat` are installed with it.
+   `check_mk_agent` and `socat` are installed with it. As long as the plugin is
+   not in the official list, see [Manual installation](#manual-installation).
 2. *Services › Checkmk Agent*: check **Enable** and click **Apply**.
 3. *Firewall › Rules*, on the interface the Checkmk server comes from: allow
    TCP to port 6556 on *This Firewall*, with the Checkmk server as source.
@@ -95,6 +96,37 @@ Not yet tested: OPNsense 26.1 (`check_mk_agent` 2.4.0p20).
 
 The plugin never opens the port itself. Who may query the agent is decided only
 by the firewall rule, so restrict the source to your Checkmk server.
+
+## Manual installation
+
+Until the plugin is in the official plugin list, install it from the
+[releases](https://gitlab.thatsallmine.de/checkmk1/opnsense_checkmk_agent/-/releases).
+Pick the package for your OPNsense version (26.1 or 26.7) and run as root on the
+firewall (console or SSH, option 8 "Shell"):
+
+```sh
+# dependencies from the OPNsense repository
+pkg install -y check_mk_agent socat
+
+# the plugin (example: 1.0-rc2 for OPNsense 26.7)
+fetch -o /tmp/os-checkmk-agent.pkg https://gitlab.thatsallmine.de/api/v4/projects/76/packages/generic/os-checkmk-agent/1.0-rc2/os-checkmk-agent-1.0-opnsense26.7.pkg
+sha256 /tmp/os-checkmk-agent.pkg      # compare with SHA256SUMS of the release
+pkg add /tmp/os-checkmk-agent.pkg
+rm /tmp/os-checkmk-agent.pkg
+
+# register it, so the firmware page lists it as an installed plugin
+/usr/local/opnsense/scripts/firmware/register.php install os-checkmk-agent
+```
+
+Then continue with step 2 of [Setup](#setup). To install a newer build of the
+same version, use `pkg add -f`. To remove it, use
+`pkg delete os-checkmk-agent` or the firmware page.
+
+The firmware page shows the plugin as *orphaned*, because it does not come from
+the OPNsense repository, and has no plugin details. That is expected.
+
+If another Checkmk agent already listens on port 6556 (for example a manually
+installed one), stop and disable it first; only one program can use the port.
 
 ## Encryption
 
@@ -133,14 +165,14 @@ applying.
 
 ## Query over SSH
 
-> Not yet tested end to end; based on how OPNsense manages users and SSH.
-
 Instead of TCP port 6556, Checkmk can also run the agent over SSH. This needs no
 setting in the plugin; OPNsense's own user management does it:
 
 1. *System › Access › Users*: create a user, e.g. `checkmk`, member of the group
-   `admins`, login shell `/bin/sh`. OPNsense allows SSH only for members of
-   `admins` (wheel). Do not set a password the user knows.
+   `admins`, login shell `/bin/sh`, with *Generate a scrambled password*.
+   OPNsense allows SSH only for members of `admins` (wheel). Membership in
+   `admins` also grants GUI rights, but without a known password the user cannot
+   log in to the GUI.
 2. In the field *Authorized keys* of that user, enter the public key of the
    Checkmk site, restricted to the agent:
 
@@ -153,8 +185,14 @@ setting in the plugin; OPNsense's own user management does it:
    with `ssh -T -oStrictHostKeyChecking=accept-new checkmk@$HOSTADDRESS$`.
 
 OPNsense writes the key from `config.xml`, so it survives updates and reboots.
-Over SSH the transport is encrypted by SSH itself; the *Encryption* setting of
-the plugin applies to port 6556 only. Enable the plugin's agent service only if
+Thanks to `command=`, the key runs only the agent: any other command still
+returns the agent output, and port forwarding is refused (tested on 26.7). The
+agent then runs as the user `checkmk` instead of root and delivers the same
+sections.
+Over SSH the transport is encrypted by SSH itself, so point `command=` to
+`/usr/local/bin/check_mk_agent` as shown. The *Encryption* setting of the plugin
+applies to port 6556 only; Checkmk reads the plain SSH output even with an
+encryption rule for the host (tested with 2.5.0p19). Enable the plugin's agent service only if
 you also want port 6556.
 
 ## Own agent plugins and local checks
