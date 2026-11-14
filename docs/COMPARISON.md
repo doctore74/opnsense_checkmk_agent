@@ -17,13 +17,15 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
 
 | Data | Plugin | Special agent | Bashclub | SNMP |
 |---|---|---|---|---|
-| CPU load and utilization | ✔ | ✔ load average | ✔ | ✔ |
+| CPU load | ✔ | ✔ load average | ✔ | – |
+| CPU utilization | ✔ | – | ✔ | ✔ |
 | Memory and swap | ✔ | ✔ | ✔ | ✔ |
 | File systems | ✔ | ✔ | ✔ | ✔ |
 | ZFS (datasets, ARC, zpool) | ✔ | – | ✔ | – |
 | Uptime | ✔ | ✔ | ✔ | ✔ |
-| Network interfaces | ✔ | ➕ | ✔ | ✔ |
-| Processes, threads, TCP connections, kernel counters | ✔ | – | ✔ | partly |
+| Network interfaces | ✔ | ➕ | ✔ | ✔ (physical interfaces) |
+| Processes, threads, TCP connections, kernel counters | ✔ | – | ✔ | – |
+| Disk I/O | ✔ | – | – | – |
 | NTP | ✔ | ➕ | ✔ | – |
 | SSH daemon configuration | ✔ | – | ✔ | – |
 | Logins | ✔ | – | – | – |
@@ -40,7 +42,7 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
 | DHCP | – | ➕ Kea, Dnsmasq | ✔ ISC DHCP | – |
 | Certificates (expiry) | – | ➕ | ✔ ACME client | – |
 | Package audit (vulnerabilities) | – | – | ✔ | – |
-| Firewall states, pf statistics | – | ➕ | – | partly |
+| Firewall states, pf statistics | – | ➕ | – | – |
 | IDS alerts | – | ➕ | – | – |
 | Squid, HAProxy, nginx, APC UPS | – | – | ✔ | – |
 
@@ -68,5 +70,18 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
   with your backups.
 - **SNMP** is the lightest option if you only need interfaces and the basics.
 
-The SNMP column follows Checkmk's generic SNMP checks for net-snmp; it was not
-tested in this project. The Bashclub column is based on its version 1.2.16.
+Where two sources deliver the same data, disable one of the services in
+Checkmk (rule *Disabled services*, or on the discovery page); no change to the
+plugin or the special agent is needed.
+
+## How the columns were verified
+
+- **Plugin:** tested on OPNsense 26.7 and 26.1 with Checkmk 2.4, 2.5 and 3.0.
+- **SNMP:** tested on OPNsense 26.7 with `os-net-snmp` (SNMPv2c) and a fresh
+  Checkmk 2.5.0p19 site, default settings: 21 services, all OK – CPU
+  utilization, memory, uptime, SNMP info, 2 interfaces, 14 file systems.
+  Not found: CPU load, ZFS, processes, TCP connections, NTP, disk I/O.
+- **Special agent:** from its source code. The ➕ endpoints were looked up in
+  the OPNsense 26.7 source, not queried.
+- **Bashclub:** from the source code of version 1.2.16 and the services it
+  delivered on an OPNsense 26.1 firewall.
