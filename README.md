@@ -274,11 +274,16 @@ building, testing and the upstream workflow.
 
 ## Feedback
 
-Questions, suggestions and test reports are welcome in the
-[Checkmk forum](https://forum.checkmk.com/) (send me, Doc, a direct message).
+Questions, suggestions and test reports are welcome:
 
-With a gitlab.com account you can also open an issue in the
-[mirror on gitlab.com](https://gitlab.com/checkmk1/opnsense_checkmk_agent/-/issues).
+- in the [Checkmk forum](https://forum.checkmk.com/) – send me (Doc) a direct
+  message
+- as an **issue or pull request on GitHub**:
+  [doctore74/opnsense_checkmk_agent](https://github.com/doctore74/opnsense_checkmk_agent)
+
+The project itself lives on gitlab.thatsallmine.de, which has no public sign-up;
+GitHub and gitlab.com are read-only mirrors of it. Pull requests on GitHub are
+taken over into the project and then appear as merged on GitHub.
 
 ## License
 
