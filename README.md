@@ -275,8 +275,10 @@ building, testing and the upstream workflow.
 ## Feedback
 
 Questions, suggestions and test reports are welcome in the
-[Checkmk forum](https://forum.checkmk.com/) (send me, Doc, a direct message), or
-as an issue in this project.
+[Checkmk forum](https://forum.checkmk.com/) (send me, Doc, a direct message).
+
+With a gitlab.com account you can also open an issue in the
+[mirror on gitlab.com](https://gitlab.com/checkmk1/opnsense_checkmk_agent/-/issues).
 
 ## License
 
