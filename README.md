@@ -197,6 +197,10 @@ you also want port 6556.
 
 ## Own agent plugins and local checks
 
+The plugin ships three small agent plugins, evaluated by Checkmk's built-in
+checks: host labels, *SSH daemon configuration* (`sshd -T` of OPNsense's SSH
+daemon) and *Logins* (number of logged-in users).
+
 The agent runs executable files from:
 
 - `/usr/local/lib/check_mk_agent/plugins/` (agent plugins)
@@ -221,12 +225,37 @@ package and comes back automatically when the plugin is installed.
 ## OPNsense data from the REST API
 
 This plugin delivers the operating system view through the agent. For
-OPNsense-specific data, such as firmware and pending updates, OPNsense services
-and SMART, use the Checkmk special agent
+OPNsense-specific data, use the Checkmk special agent
 [**opnsense**](https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense),
 which queries the OPNsense REST API. Both work side by side on the same host.
-Wishes for data from the REST API (for example DHCP, gateways, VPN) belong
-there.
+Wishes for data from the REST API belong there.
+
+| Data | This plugin (agent) | Special agent "opnsense" (✔ today, ➕ possible via API) |
+|---|---|---|
+| CPU load and utilization | ✔ | ✔ load average (overlap) |
+| Memory and swap | ✔ | ✔ (overlap) |
+| File systems, ZFS, zpool | ✔ | ✔ file systems (overlap) |
+| Uptime | ✔ | ✔ (overlap) |
+| Network interfaces (traffic, errors) | ✔ | ➕ `interfaces/overview`, `diagnostics/interface` |
+| Processes, threads, TCP connections, kernel counters | ✔ | – |
+| NTP | ✔ | ➕ `ntpd/service` |
+| SSH daemon configuration, logins | ✔ | – |
+| Host labels, own agent plugins and local checks | ✔ | – |
+| Firmware version, pending updates | – | ✔ `core/firmware/status` |
+| OPNsense services | – | ✔ `core/service/search` |
+| SMART (with os-smart) | – | ✔ `smart/service` |
+| Temperatures | – | ✔ queried (`diagnostics/system/system_temperature`) |
+| Gateways (latency, loss) | – | ➕ `routes/gateway/status` |
+| CARP / high availability | – | ➕ `diagnostics/interface/carpStatus`, `getVipStatus` |
+| VPN: IPsec, OpenVPN, WireGuard | – | ➕ `ipsec/sessions`, `openvpn/service/searchSessions`, `wireguard/service/show` |
+| DNS resolver statistics (Unbound) | – | ➕ `unbound/diagnostics/stats` |
+| DHCP leases (Kea, Dnsmasq) | – | ➕ `kea/leases4`, `dnsmasq/leases/search` |
+| Certificate expiry | – | ➕ `trust/cert/search` |
+| Firewall states and pf statistics | – | ➕ `diagnostics/firewall/pfStatistics` |
+| IDS alerts | – | ➕ `ids/service/queryAlerts` |
+
+The ➕ endpoints exist in OPNsense 26.7; they are ideas for the special agent,
+not part of it today.
 
 ## Uninstalling
 

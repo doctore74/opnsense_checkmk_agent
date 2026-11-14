@@ -11,6 +11,7 @@ Features:
 * Optional symmetric encryption, compatible with Checkmk's rule
   "Symmetric encryption (Linux, Windows)"
 * Host labels "opnsense" and "opnsense/version" for Checkmk rules
+* Agent plugins for the SSH daemon configuration and logged-in users
 * Own agent plugins and local checks in
   /usr/local/lib/check_mk_agent/plugins and .../local
 
