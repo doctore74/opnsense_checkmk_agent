@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# keep the encryption secret readable by root only
+/usr/bin/install -d -m 0700 /usr/local/etc/checkmkagent
