@@ -199,7 +199,9 @@ you also want port 6556.
 
 The plugin ships three small agent plugins, evaluated by Checkmk's built-in
 checks: host labels, *SSH daemon configuration* (`sshd -T` of OPNsense's SSH
-daemon) and *Logins* (number of logged-in users).
+daemon) and *Logins* (number of logged-in users). To leave out a service you do
+not need, disable it in Checkmk (rule *Disabled services*, or on the service
+discovery page) – centrally for all firewalls, no setting on OPNsense needed.
 
 The agent runs executable files from:
 
