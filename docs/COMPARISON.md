@@ -22,7 +22,7 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
 | Memory and swap | ✔ | ✔ | ✔ | ✔ |
 | File systems | ✔ | ✔ | ✔ | ✔ |
 | ZFS (datasets, ARC, zpool) | ✔ | – | ✔ | – |
-| Uptime | ✔ | ✔ | ✔ | ✔ |
+| Uptime | ✔ | ✔ (in *OPNsense System*) | ✔ | ✔ |
 | Network interfaces | ✔ | ➕ | ✔ | ✔ (physical interfaces) |
 | Processes, threads, TCP connections, kernel counters | ✔ | – | ✔ | – |
 | Disk I/O | ✔ | – | – | – |
@@ -34,7 +34,7 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
 | Firmware version, pending updates | – | ✔ | ✔ | – |
 | OPNsense services | – | ✔ | ✔ | – |
 | SMART | – | ✔ (with os-smart) | ✔ | – |
-| Temperatures | – | ✔ queried | ✔ | – |
+| Temperatures | – | queried, no service | ✔ | – |
 | Gateways (latency, loss) | – | ➕ | ✔ | – |
 | CARP / high availability | – | ➕ | ✔ | – |
 | VPN: IPsec, OpenVPN, WireGuard | – | ➕ | ✔ | – |
@@ -81,7 +81,12 @@ plugin or the special agent is needed.
   Checkmk 2.5.0p19 site, default settings: 21 services, all OK – CPU
   utilization, memory, uptime, SNMP info, 2 interfaces, 14 file systems.
   Not found: CPU load, ZFS, processes, TCP connections, NTP, disk I/O.
-- **Special agent:** from its source code. The ➕ endpoints were looked up in
-  the OPNsense 26.7 source, not queried.
+- **Special agent:** version 1.1.1 tested on OPNsense 26.7 with a fresh
+  Checkmk 2.5.0p19 site (API key of an admin user, port 443): 30 services –
+  *OPNsense System* (status, uptime, load average), *OPNsense Memory*, 12
+  *OPNsense Filesystem*, *OPNsense Firmware*, 13 *OPNsense Service* (including
+  the service of this plugin, `checkmkagent`). Temperatures are queried but
+  give no service; SMART was not tested (no os-smart on the virtual machine).
+  The ➕ endpoints were looked up in the OPNsense 26.7 source, not queried.
 - **Bashclub:** from the source code of version 1.2.16 and the services it
   delivered on an OPNsense 26.1 firewall.
