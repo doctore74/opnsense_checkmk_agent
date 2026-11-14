@@ -22,6 +22,7 @@ labels that mark the host as OPNsense.
 - [Setup](#setup)
 - [Encryption](#encryption)
 - [Host labels](#host-labels)
+- [Query over SSH](#query-over-ssh)
 - [Own agent plugins and local checks](#own-agent-plugins-and-local-checks)
 - [Updates](#updates)
 - [OPNsense data from the REST API](#opnsense-data-from-the-rest-api)
@@ -62,9 +63,14 @@ Settings page under *Services › Checkmk Agent*:
 
 ![Settings](docs/screenshots/settings.png)
 
-The firewall as a host in Checkmk:
+The firewall as a host in a fresh Checkmk 2.5 site, with only the services the
+agent provides:
 
 ![Services in Checkmk](docs/screenshots/checkmk-services.png)
+
+Host labels set by the plugin, next to Checkmk's own labels:
+
+![Host labels](docs/screenshots/checkmk-labels.png)
 
 ## Tested with
 
@@ -124,6 +130,32 @@ Checkmk shows them on the host after the service discovery. Use them in rule
 conditions to target all OPNsense firewalls, or one OPNsense version. The agent
 itself still reports `AgentOS: freebsd`, so rules for FreeBSD hosts keep
 applying.
+
+## Query over SSH
+
+> Not yet tested end to end; based on how OPNsense manages users and SSH.
+
+Instead of TCP port 6556, Checkmk can also run the agent over SSH. This needs no
+setting in the plugin; OPNsense's own user management does it:
+
+1. *System › Access › Users*: create a user, e.g. `checkmk`, member of the group
+   `admins`, login shell `/bin/sh`. OPNsense allows SSH only for members of
+   `admins` (wheel). Do not set a password the user knows.
+2. In the field *Authorized keys* of that user, enter the public key of the
+   Checkmk site, restricted to the agent:
+
+   ```
+   command="/usr/local/bin/check_mk_agent",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty ssh-ed25519 AAAA... checkmk
+   ```
+
+3. *System › Settings › Administration*: enable Secure Shell.
+4. In Checkmk, use the rule *Individual program call instead of agent access*
+   with `ssh -T -oStrictHostKeyChecking=accept-new checkmk@$HOSTADDRESS$`.
+
+OPNsense writes the key from `config.xml`, so it survives updates and reboots.
+Over SSH the transport is encrypted by SSH itself; the *Encryption* setting of
+the plugin applies to port 6556 only. Enable the plugin's agent service only if
+you also want port 6556.
 
 ## Own agent plugins and local checks
 
