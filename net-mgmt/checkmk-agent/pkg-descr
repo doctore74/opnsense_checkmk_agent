@@ -19,12 +19,14 @@ Use firewall rules to allow port 6556 only from the Checkmk server.
 
 For OPNsense-specific data from the REST API (firmware and updates,
 services, SMART), combine this plugin with the Checkmk special agent
-"opnsense":
-https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense
+"opnsense" (link below).
 
 I did not develop this plugin officially as an employee of Checkmk
 GmbH, but rather as a private individual.
 
-Documentation, screenshots and tested versions:
+Documentation, screenshots, tested versions, questions and issues:
 
-WWW: https://gitlab.thatsallmine.de/checkmk1/opnsense_checkmk_agent
+WWW: https://github.com/doctore74/opnsense_checkmk_agent
+
+Checkmk special agent "opnsense" for data from the OPNsense REST API:
+https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense

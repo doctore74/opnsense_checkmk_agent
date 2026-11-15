@@ -10,6 +10,12 @@ repository: `check_mk_agent` (the Checkmk agent for FreeBSD) and `socat` (makes
 it reachable on TCP port 6556). It adds optional symmetric encryption and host
 labels that mark the host as OPNsense.
 
+> **Tip:** combine it with the Checkmk special agent
+> [**opnsense**](https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense)
+> by Gulaschcowboy. It queries the OPNsense REST API for firmware and updates,
+> services, SMART and more, and runs side by side with this plugin on the same
+> host (see [OPNsense data from the REST API](#opnsense-data-from-the-rest-api)).
+
 > Status: in development, planned as a pull request to
 > [opnsense/plugins](https://github.com/opnsense/plugins). Not yet available in
 > the OPNsense plugin list.

@@ -29,6 +29,8 @@
 # of Checkmk's Linux agent ("05"): PBKDF2-SHA256 (600000 iterations)
 # derives key and IV, AES-256-CBC encrypts, HMAC-SHA256 signs IV and
 # ciphertext. Output: "05", salt, HMAC, ciphertext.
+# The steps follow encrypt_then_mac() in Checkmk's Linux agent, using
+# only the base system's openssl and sh.
 
 AGENT=/usr/local/bin/check_mk_agent
 SECRET_FILE=/usr/local/etc/checkmkagent/secret
