@@ -25,6 +25,6 @@ https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense
 I did not develop this plugin officially as an employee of Checkmk
 GmbH, but rather as a private individual.
 
-Documentation, screenshots and tested versions:
+Documentation, screenshots, tested versions, questions and issues:
 
-WWW: https://gitlab.thatsallmine.de/checkmk1/opnsense_checkmk_agent
+WWW: https://github.com/doctore74/opnsense_checkmk_agent
