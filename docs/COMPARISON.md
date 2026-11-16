@@ -34,14 +34,15 @@ Legend: ✔ provided (optional extra: one of the agent plugins in `extras/agent-
 | Firmware version, pending updates | – | ✔ | ✔ | – |
 | OPNsense services | – | ✔ | ✔ | – |
 | SMART | – | ✔ (with os-smart) | ✔ | – |
-| Temperatures | – | queried, no service | ✔ | – |
-| Gateways (latency, loss) | – | ➕ | ✔ | – |
+| Temperatures | – | ✔ (since 1.2.0) | ✔ | – |
+| Gateways (status, latency, loss) | – | ✔ (since 1.2.0) | ✔ | – |
 | CARP / high availability | – | ➕ | ✔ | – |
-| VPN: IPsec, OpenVPN, WireGuard | – | ➕ | ✔ | – |
+| WireGuard peers (handshake, traffic) | – | ✔ (since 1.2.0) | ✔ | – |
+| VPN: IPsec, OpenVPN | – | ➕ | ✔ | – |
 | Unbound DNS resolver | – | ➕ | ✔ | – |
-| DHCP | – | ➕ Kea, Dnsmasq | ✔ ISC DHCP | – |
+| DHCP pool usage | – | ✔ Kea, Dnsmasq (since 1.2.0, not tested here); ISC DHCP: – | ✔ ISC DHCP | – |
 | Certificates (expiry) | – | ➕ | ✔ ACME client | – |
-| Package audit (vulnerabilities) | – | – | ✔ | – |
+| Package audit (vulnerabilities) | – | ✔ (since 1.2.0, see note) | ✔ | – |
 | Firewall states, pf statistics | – | ➕ | – | – |
 | IDS alerts | – | ➕ | – | – |
 | Squid, HAProxy, nginx, APC UPS | – | – | ✔ | – |
@@ -113,13 +114,23 @@ agent; SNMP is also the lightest option if interfaces and the basics are enough.
   Checkmk 2.5.0p19 site, default settings: 21 services, all OK – CPU
   utilization, memory, uptime, SNMP info, 2 interfaces, 14 file systems.
   Not found: CPU load, ZFS, processes, TCP connections, NTP, disk I/O.
-- **API agent:** version 1.1.1 tested on OPNsense 26.7 with a fresh
-  Checkmk 2.5.0p19 site (API key of an admin user, port 443): 30 services –
-  *OPNsense System* (status, uptime, load average), *OPNsense Memory*, 12
-  *OPNsense Filesystem*, *OPNsense Firmware*, 13 *OPNsense Service* (including
-  the service of this plugin, `checkmkagent`). Temperatures are queried but
-  give no service; SMART was not tested (no os-smart on the virtual machine).
-  The ➕ endpoints were looked up in the OPNsense 26.7 source, not queried.
+- **API agent:** version 1.2.0 (2026-11-16) tested
+  - on OPNsense 26.7 with a fresh Checkmk 2.5.0p20 site (API key of an admin
+    user, port 443): 32 services – *OPNsense System* (status, uptime, load
+    average), *OPNsense Memory*, 12 *OPNsense Filesystem*, *OPNsense Firmware*,
+    13 *OPNsense Service* (including the service of this plugin,
+    `checkmkagent`), *OPNsense Gateway* and *OPNsense Package audit*. The
+    virtual machine has no temperature sensors, WireGuard tunnels, DHCP pools
+    or os-smart;
+  - on an OPNsense 26.1 firewall in production (Checkmk 2.5.0p19): gateways with
+    status, RTT and packet loss, one service per WireGuard peer, 5 temperature
+    sensors, package audit with a result, SMART. That firewall uses ISC DHCP,
+    which 1.2.0 does not read (Kea and Dnsmasq only).
+  - **Note:** in 1.2.0, every run triggers a full firmware update check on the
+    firewall, so a run takes 26–36 s and the package audit result is not always
+    picked up. Reported upstream:
+    [Gulaschcowboy/checkmk_extensions#7](https://github.com/Gulaschcowboy/checkmk_extensions/issues/7).
+  - The ➕ endpoints were looked up in the OPNsense 26.7 source, not queried.
 - **Bashclub:** from the source code of version 1.2.16 and the services it
   delivered on an OPNsense 26.1 firewall.
 
