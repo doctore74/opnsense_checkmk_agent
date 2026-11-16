@@ -242,15 +242,17 @@ the same firewall, is in [docs/COMPARISON.md](docs/COMPARISON.md).
 | Firmware version, pending updates | – | ✔ `core/firmware/status` |
 | OPNsense services | – | ✔ `core/service/search` |
 | SMART (with os-smart) | – | ✔ `smart/service` |
-| Temperatures | – | ✔ queried (`diagnostics/system/system_temperature`) |
-| Gateways (latency, loss) | – | ➕ `routes/gateway/status` |
+| Temperatures | – | ✔ (since 1.2.0) |
+| Gateways (status, latency, loss) | – | ✔ (since 1.2.0) |
 | CARP / high availability | – | ➕ `diagnostics/interface/carpStatus`, `getVipStatus` |
-| VPN: IPsec, OpenVPN, WireGuard | – | ➕ `ipsec/sessions`, `openvpn/service/searchSessions`, `wireguard/service/show` |
+| WireGuard peers | – | ✔ (since 1.2.0) |
+| VPN: IPsec, OpenVPN | – | ➕ `ipsec/sessions`, `openvpn/service/searchSessions` |
 | DNS resolver statistics (Unbound) | – | ➕ `unbound/diagnostics/stats` |
-| DHCP leases (Kea, Dnsmasq) | – | ➕ `kea/leases4`, `dnsmasq/leases/search` |
+| DHCP pool usage (Kea, Dnsmasq) | – | ✔ (since 1.2.0) |
 | Certificate expiry | – | ➕ `trust/cert/search` |
 | Firewall states and pf statistics | – | ➕ `diagnostics/firewall/pfStatistics` |
 | IDS alerts | – | ➕ `ids/service/queryAlerts` |
+| Package audit (vulnerabilities) | – | ✔ (since 1.2.0) |
 
 The ➕ endpoints exist in OPNsense 26.7; they are ideas for the API agent,
 not part of it today.
