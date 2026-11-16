@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+- After the upstream review: the plugin keeps the agent output stock (no bundled
+  agent plugins), has no deinstall/upgrade hooks and a short description.
+
 ### Added
 
 - OPNsense plugin `os-checkmk-agent` 1.0: runs the Checkmk agent on TCP port
@@ -9,5 +14,6 @@
   *Services › Checkmk Agent*.
 - Optional symmetric encryption, compatible with Checkmk's rule
   *Symmetric encryption (Linux, Windows)*.
-- Host labels `opnsense` and `opnsense/version`.
+- Optional agent plugins (host labels, SSH daemon configuration, logins) in
+  `extras/agent-plugins/`, outside the OPNsense plugin.
 - Documentation, test results and a copy of the plugin source.

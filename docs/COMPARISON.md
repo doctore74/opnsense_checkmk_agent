@@ -10,7 +10,7 @@ complement each other; this page helps to pick and combine them.
 | **Bashclub** | the [Bashclub OPNsense agent](https://github.com/bashclub/checkmk-opnsense-agent): a Python agent with many OPNsense-specific checks, installed manually as a startup script |
 | **SNMP** | OPNsense's official plugin `os-net-snmp` together with Checkmk's built-in SNMP checks |
 
-Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsense
+Legend: ✔ provided (optional extra: one of the agent plugins in `extras/agent-plugins/`, not part of the OPNsense plugin) · ➕ possible via the REST API (endpoint exists in OPNsense
 26.7), not part of the API agent today · – not provided
 
 ## Data
@@ -27,9 +27,9 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
 | Processes, threads, TCP connections, kernel counters | ✔ | – | ✔ | – |
 | Disk I/O | ✔ | – | – | – |
 | NTP | ✔ | ➕ | ✔ | – |
-| SSH daemon configuration | ✔ | – | ✔ | – |
-| Logins | ✔ | – | – | – |
-| Host labels | ✔ | – | ✔ | – |
+| SSH daemon configuration | ✔ (optional extra) | – | ✔ | – |
+| Logins | ✔ (optional extra) | – | – | – |
+| Host labels | ✔ (optional extra) | – | ✔ | – |
 | Own agent plugins and local checks | ✔ | – | ✔ | – |
 | Firmware version, pending updates | – | ✔ | ✔ | – |
 | OPNsense services | – | ✔ | ✔ | – |

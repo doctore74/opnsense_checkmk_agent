@@ -39,11 +39,13 @@ scripts/sync_plugin.sh ../opnsense_plugins
 - **Secret permissions:** templates copy the permissions of the target
   directory. `+POST_INSTALL.pre` creates `/usr/local/etc/checkmkagent` with mode
   `0700` before the first template reload, so the secret file gets `0600`.
-- **Host labels:** `src/lib/check_mk_agent/plugins/opnsense` prints a
-  `<<<labels:sep(0)>>>` section with `opnsense` and `opnsense/version`.
-- **Package hooks:** `+PRE_DEINSTALL.pre` stops the agent and removes the secret
-  directory; `+POST_INSTALL.post` starts the agent again after an upgrade if it
-  is enabled.
+- **Stock output:** the plugin adds nothing to the agent output (review of the
+  upstream pull request). Optional agent plugins live in `extras/agent-plugins/`
+  of this repository, outside the OPNsense plugin.
+- **No deinstall/upgrade hooks** (review of the upstream pull request): an
+  upgrade leaves the running agent alone; after an uninstall socat keeps the
+  port until the next reboot but returns no data, and after a reinstall the agent
+  starts with the next Apply or reboot.
 
 ## Files
 
@@ -52,12 +54,9 @@ net-mgmt/checkmk-agent/
 ├── Makefile                 PLUGIN_DEPENDS=check_mk_agent socat
 ├── pkg-descr                plugin details shown in the firmware GUI
 ├── +POST_INSTALL.pre        secret directory 0700
-├── +POST_INSTALL.post       restart after upgrade
-├── +PRE_DEINSTALL.pre       stop, remove secret
 └── src/
     ├── etc/inc/plugins.inc.d/checkmkagent.inc    service list entry
     ├── etc/rc.d/checkmkagent                     start/stop (socat line)
-    ├── lib/check_mk_agent/plugins/opnsense       host labels
     └── opnsense/
         ├── mvc/app/models/OPNsense/CheckmkAgent/       model, menu, ACL
         ├── mvc/app/controllers/OPNsense/CheckmkAgent/  controllers, form
@@ -88,18 +87,27 @@ make upgrade                          # build and install the package
 `register.php` is only needed for a package installed from source; otherwise the
 firmware page shows the plugin as "misconfigured".
 
-Test cases (all passed on OPNsense 26.7, 2026-11-14):
+Test cases (all passed on OPNsense 26.7 and 26.1.11, 2026-11-16, build 1.0-rc5):
 
-1. `make lint`, `make sweep` without findings
-2. install: `check_mk_agent` and `socat` come along, agent disabled
-3. enable/disable/enable in GUI order (stop, template reload, start)
-4. agent answers on IPv4 and IPv6
-5. encryption: output starts with `05` and is decrypted by Checkmk's own
-   `decrypt_by_agent_protocol` (2.4, 2.5, 3.0); secret file `0600`
-6. host labels discovered in a Checkmk site
-7. reboot: agent starts by itself
-8. upgrade: agent running again if enabled, stopped if disabled
-9. uninstall: agent stopped, secret removed
+1. `make lint`, `make sweep` (no changes), phpcs with the core ruleset (`make
+   style`) and ShellCheck without findings
+2. fresh install from the release: `check_mk_agent` and `socat` come along,
+   agent disabled, secret directory `0700`, file `0600`
+3. settings, Apply and status through the real API (as the GUI does it); invalid
+   values are refused; GUI page loads without JavaScript errors
+4. agent answers on IPv4 and IPv6, output is the stock output (21 sections)
+5. encryption with a secret containing special characters: decrypted by
+   Checkmk's own `decrypt_by_agent_protocol` (2.4, 2.5, 3.0); wrong secret gives
+   "MAC mismatch"; encryption without secret gives only `EncryptionPanic`; the
+   secret never shows up in the process list
+6. real sites with the encryption rule (2.4.0p41, 2.5.0p20, 3.0 daily): 25
+   services each; with encryption enforced, plain text is refused
+7. SSH query with `command=`: agent output only, port forwarding refused
+8. reboot: agent starts by itself, encrypted
+9. upgrade while running: agent keeps running
+10. uninstall: package gone; port open until reboot but no data
+11. on the production firewall (26.1): install, enable/disable, encryption,
+    reinstall while running, Checkmk 2.5.0p19 queries it
 
 ## Checkmk test sites
 
