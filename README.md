@@ -10,7 +10,7 @@ repository: `check_mk_agent` (the Checkmk agent for FreeBSD) and `socat` (makes
 it reachable on TCP port 6556). It adds optional symmetric encryption and host
 labels that mark the host as OPNsense.
 
-> **Tip:** combine it with the Checkmk special agent
+> **Tip:** combine it with the Checkmk API agent
 > [**opnsense**](https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense)
 > by Gulaschcowboy. It queries the OPNsense REST API for firmware and updates,
 > services, SMART and more, and runs side by side with this plugin on the same
@@ -57,7 +57,7 @@ flowchart LR
 
     subgraph CMK["Checkmk site"]
         BUILTIN["Built-in checks<br/>CPU, memory, file systems,<br/>interfaces, processes ..."]
-        SPECIAL["Special agent 'opnsense'<br/>firmware, services, SMART ..."]
+        SPECIAL["API agent 'opnsense'<br/>firmware, services, SMART ..."]
     end
 
     BUILTIN -- "agent query" --> FW --> SOCAT
@@ -233,13 +233,15 @@ package and comes back automatically when the plugin is installed.
 ## OPNsense data from the REST API
 
 This plugin delivers the operating system view through the agent. For
-OPNsense-specific data, use the Checkmk special agent
+OPNsense-specific data, use the Checkmk API agent
 [**opnsense**](https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense),
-which queries the OPNsense REST API. Both work side by side on the same host.
+a Checkmk *special agent*: a program on the Checkmk server that queries the
+OPNsense REST API, with nothing installed on the firewall. Both work side by side on the same host.
 Wishes for data from the REST API belong there. A wider comparison, including
-SNMP and the Bashclub agent, is in [docs/COMPARISON.md](docs/COMPARISON.md).
+SNMP and the Bashclub agent, and the agent measured side by side with SNMP on
+the same firewall, is in [docs/COMPARISON.md](docs/COMPARISON.md).
 
-| Data | This plugin (agent) | Special agent "opnsense" (✔ today, ➕ possible via API) |
+| Data | This plugin (agent) | API agent "opnsense" (✔ today, ➕ possible via API) |
 |---|---|---|
 | CPU load and utilization | ✔ | ✔ load average (overlap) |
 | Memory and swap | ✔ | ✔ (overlap) |
@@ -263,7 +265,7 @@ SNMP and the Bashclub agent, is in [docs/COMPARISON.md](docs/COMPARISON.md).
 | Firewall states and pf statistics | – | ➕ `diagnostics/firewall/pfStatistics` |
 | IDS alerts | – | ➕ `ids/service/queryAlerts` |
 
-The ➕ endpoints exist in OPNsense 26.7; they are ideas for the special agent,
+The ➕ endpoints exist in OPNsense 26.7; they are ideas for the API agent,
 not part of it today.
 
 ## Uninstalling

@@ -6,16 +6,16 @@ complement each other; this page helps to pick and combine them.
 | Short name | What it is |
 |---|---|
 | **Plugin** | this project, `os-checkmk-agent`: Checkmk's FreeBSD agent as an OPNsense plugin |
-| **Special agent** | the Checkmk special agent [opnsense](https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense): queries the OPNsense REST API from the Checkmk server |
+| **API agent** | [opnsense](https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense), a Checkmk *special agent*: a program on the Checkmk server that queries the OPNsense REST API – nothing is installed on the firewall |
 | **Bashclub** | the [Bashclub OPNsense agent](https://github.com/bashclub/checkmk-opnsense-agent): a Python agent with many OPNsense-specific checks, installed manually as a startup script |
 | **SNMP** | OPNsense's official plugin `os-net-snmp` together with Checkmk's built-in SNMP checks |
 
 Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsense
-26.7), not part of the special agent today · – not provided
+26.7), not part of the API agent today · – not provided
 
 ## Data
 
-| Data | Plugin | Special agent | Bashclub | SNMP |
+| Data | Plugin | API agent | Bashclub | SNMP |
 |---|---|---|---|---|
 | CPU load | ✔ | ✔ load average | ✔ | – |
 | CPU utilization | ✔ | – | ✔ | ✔ |
@@ -48,7 +48,7 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
 
 ## Operation
 
-| Aspect | Plugin | Special agent | Bashclub | SNMP |
+| Aspect | Plugin | API agent | Bashclub | SNMP |
 |---|---|---|---|---|
 | Installation | OPNsense plugin list (planned), until then a package from the releases | MKP on the Checkmk server | script copied to the firewall | OPNsense plugin `os-net-snmp` |
 | Configuration | OPNsense GUI, stored in `config.xml` | Checkmk rule (API key) | config file on the firewall | OPNsense GUI |
@@ -60,8 +60,8 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
 
 ## Recommendation
 
-- **Plugin + special agent** together: the plugin delivers the operating system
-  view from Checkmk's own agent and checks, the special agent the OPNsense view
+- **Plugin + API agent** together: the plugin delivers the operating system
+  view from Checkmk's own agent and checks, the API agent the OPNsense view
   from the REST API. Both are configured in the GUI (OPNsense and Checkmk) and
   survive updates and reinstalls. The overlapping basics (CPU, memory, file
   systems, uptime) come from both; use one of them for each.
@@ -72,7 +72,39 @@ Legend: ✔ provided · ➕ possible via the REST API (endpoint exists in OPNsen
 
 Where two sources deliver the same data, disable one of the services in
 Checkmk (rule *Disabled services*, or on the discovery page); no change to the
-plugin or the special agent is needed.
+plugin or the API agent is needed.
+
+## Agent and SNMP on the same firewall
+
+Both queried at the same time from fresh Checkmk 2.5.0p19 sites, same OPNsense
+26.7 virtual machine (2 cores, 4 GB RAM), default settings in Checkmk:
+
+| | Checkmk agent (this plugin) | SNMP (`os-net-snmp`, SNMPv2c) |
+|---|---|---|
+| Services found | **28** | 21 |
+| CPU | *CPU load* (1/5/15 min, per core: 0.29 / 0.14) **and** *CPU utilization* (2.08 %) | *CPU utilization* only (2.00 %) |
+| Memory | RAM and swap from FreeBSD's own counters (`sysctl`): 1.18 GiB used of 3.82 GiB | from the generic host resources MIB, with its own definition of "used": 994 MiB of 3.95 GiB |
+| File systems | 13, from ZFS itself (`zfs get`): correct size and free space per dataset | 14 – including two nullfs mounts of Unbound that repeat the numbers of `/` (one full disk would alert three times) |
+| Network interfaces | bytes, packets, errors and drops received; bytes, packets and errors sent; speed and link state | **more detail:** the full IF-MIB with 64-bit counters, errors and discards in both directions, unicast/multicast/broadcast, MAC address and description |
+| ZFS | *ZFS arc cache*, *zpool status* | – |
+| Processes, threads, TCP connections, kernel counters, disk I/O | ✔ | – |
+| NTP | *NTP Time* with offset, stratum, jitter | – |
+| HW/SW inventory | ✔ | – |
+| Own checks | local checks and agent plugins as small scripts | – |
+
+Why the agent is the better fit for a firewall:
+
+- **Security:** SNMPv2c sends the community string and all data in plain text;
+  SNMPv3 needs extra users and settings on both sides. The agent is reached only
+  through a firewall rule and can encrypt its output (or run over SSH).
+- **Fewer moving parts:** one TCP connection per check interval returns all data;
+  SNMP walks many tables over UDP.
+- **Built-in checks:** the agent's sections are evaluated by Checkmk's own checks
+  for FreeBSD and ZFS – no extra check code to maintain.
+- **Extensible:** anything that can be scripted becomes a service.
+
+For network interfaces SNMP is the standard and gives more counters than the
+agent; SNMP is also the lightest option if interfaces and the basics are enough.
 
 ## How the columns were verified
 
@@ -81,7 +113,7 @@ plugin or the special agent is needed.
   Checkmk 2.5.0p19 site, default settings: 21 services, all OK – CPU
   utilization, memory, uptime, SNMP info, 2 interfaces, 14 file systems.
   Not found: CPU load, ZFS, processes, TCP connections, NTP, disk I/O.
-- **Special agent:** version 1.1.1 tested on OPNsense 26.7 with a fresh
+- **API agent:** version 1.1.1 tested on OPNsense 26.7 with a fresh
   Checkmk 2.5.0p19 site (API key of an admin user, port 443): 30 services –
   *OPNsense System* (status, uptime, load average), *OPNsense Memory*, 12
   *OPNsense Filesystem*, *OPNsense Firmware*, 13 *OPNsense Service* (including
