@@ -85,6 +85,7 @@ Both queried at the same time from fresh Checkmk 2.5.0p19 sites, same OPNsense
 | CPU | *CPU load* (1/5/15 min, per core: 0.29 / 0.14) **and** *CPU utilization* (2.08 %) | *CPU utilization* only (2.00 %) |
 | Memory | RAM and swap from FreeBSD's own counters (`sysctl`): 1.18 GiB used of 3.82 GiB | from the generic host resources MIB, with its own definition of "used": 994 MiB of 3.95 GiB |
 | File systems | 13, from ZFS itself (`zfs get`): correct size and free space per dataset | 14 – including two nullfs mounts of Unbound that repeat the numbers of `/` (one full disk would alert three times) |
+| Network interfaces | bytes, packets, errors and drops received; bytes, packets and errors sent; speed and link state | **more detail:** the full IF-MIB with 64-bit counters, errors and discards in both directions, unicast/multicast/broadcast, MAC address and description |
 | ZFS | *ZFS arc cache*, *zpool status* | – |
 | Processes, threads, TCP connections, kernel counters, disk I/O | ✔ | – |
 | NTP | *NTP Time* with offset, stratum, jitter | – |
@@ -102,7 +103,8 @@ Why the agent is the better fit for a firewall:
   for FreeBSD and ZFS – no extra check code to maintain.
 - **Extensible:** anything that can be scripted becomes a service.
 
-SNMP is still the lightest option if interfaces and the basics are enough.
+For network interfaces SNMP is the standard and gives more counters than the
+agent; SNMP is also the lightest option if interfaces and the basics are enough.
 
 ## How the columns were verified
 
