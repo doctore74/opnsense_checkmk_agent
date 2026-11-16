@@ -7,8 +7,8 @@ processes, uptime, NTP and more.
 
 The plugin is a switch in the OPNsense GUI around two packages from the OPNsense
 repository: `check_mk_agent` (the Checkmk agent for FreeBSD) and `socat` (makes
-it reachable on TCP port 6556). It adds optional symmetric encryption and host
-labels that mark the host as OPNsense.
+it reachable on TCP port 6556). It adds optional symmetric encryption and
+nothing else: the agent output stays exactly as the port delivers it.
 
 > **Tip:** combine it with the Checkmk API agent
 > [**opnsense**](https://github.com/Gulaschcowboy/checkmk_extensions/tree/main/opnsense)
@@ -28,7 +28,6 @@ labels that mark the host as OPNsense.
 - [Setup](#setup)
 - [Manual installation](#manual-installation)
 - [Encryption](#encryption)
-- [Host labels](#host-labels)
 - [Query over SSH](#query-over-ssh)
 - [Own agent plugins and local checks](#own-agent-plugins-and-local-checks)
 - [Updates](#updates)
@@ -50,7 +49,7 @@ flowchart LR
         FW["Firewall rule<br/>TCP 6556"]
         SOCAT["socat<br/>TCP 6556, IPv4 + IPv6"]
         WRAP["agent wrapper<br/>optional encryption"]
-        AGENT["check_mk_agent<br/>+ host labels plugin<br/>+ own plugins / local checks"]
+        AGENT["check_mk_agent<br/>+ own plugins / local checks"]
         API["OPNsense REST API"]
         GUI --> CFG --> RC --> SOCAT --> WRAP --> AGENT
     end
@@ -66,7 +65,7 @@ flowchart LR
 
 ## Screenshots
 
-Settings page under *Services › Checkmk Agent*:
+Settings page under *Services › Checkmk Agent* (here with encryption enabled):
 
 ![Settings](docs/screenshots/settings.png)
 
@@ -75,19 +74,15 @@ agent provides:
 
 ![Services in Checkmk](docs/screenshots/checkmk-services.png)
 
-Host labels set by the plugin, next to Checkmk's own labels:
-
-![Host labels](docs/screenshots/checkmk-labels.png)
-
 ## Tested with
 
 | Component | Version | Result |
 |---|---|---|
-| OPNsense 26.7 | 26.7 (FreeBSD 15.1), `check_mk_agent` 2.5.0p15, `socat` 1.8.1.3 | install, enable/disable, reboot, upgrade, uninstall, encryption, SSH: OK (2026-11-14) |
-| OPNsense 26.1 | 26.1.11_10 (FreeBSD 14.3), `check_mk_agent` 2.4.0p20, `socat` 1.8.1.1 | manual installation from the release, agent queried by Checkmk 2.5.0p19: OK (2026-11-14, long-term test running) |
-| Checkmk 2.4 | `checkmk/check-mk-cloud:2.4.0p40` | discovery (26 services), decryption: OK (2026-11-14) |
-| Checkmk 2.5 | 2.5.0p19 Ultimate | 36 services OK in production monitoring, decryption, host labels: OK (2026-11-14) |
-| Checkmk 3.0 | `checkmk/check-mk-ultimate:3.0.0-2026.11.14` (daily) | discovery (26 services), decryption: OK (2026-11-14) |
+| OPNsense 26.7 | 26.7 (FreeBSD 15.1), `check_mk_agent` 2.5.0p15, `socat` 1.8.1.3 | fresh install from the release, settings and apply via GUI/API, IPv4/IPv6, encryption, SSH, reboot, upgrade, uninstall: OK (2026-11-16) |
+| OPNsense 26.1 | 26.1.11_10 (FreeBSD 14.3), `check_mk_agent` 2.4.0p20, `socat` 1.8.1.1 | install from the release, enable/disable, encryption, reinstall while running, queried by Checkmk 2.5.0p19 in production: OK (2026-11-16, long-term test running) |
+| Checkmk 2.4 | `checkmk/check-mk-cloud:2.4.0p41` | encrypted query and service discovery (25 services): OK (2026-11-16) |
+| Checkmk 2.5 | `checkmk/check-mk-ultimate:2.5.0p20` | encrypted query with encryption enforced, plain text refused, service discovery (25 services): OK (2026-11-16) |
+| Checkmk 3.0 | `checkmk/check-mk-ultimate:3.0.0-2026.11.16` (daily) | encrypted query and service discovery (25 services): OK (2026-11-16) |
 
 ## Setup
 
@@ -114,8 +109,8 @@ firewall (console or SSH, option 8 "Shell"):
 # dependencies from the OPNsense repository
 pkg install -y check_mk_agent socat
 
-# the plugin (example: 1.0-rc3 for OPNsense 26.7)
-fetch -o /tmp/os-checkmk-agent.pkg https://gitlab.thatsallmine.de/api/v4/projects/76/packages/generic/os-checkmk-agent/1.0-rc3/os-checkmk-agent-1.0-opnsense26.7.pkg
+# the plugin (example: 1.0-rc5 for OPNsense 26.7)
+fetch -o /tmp/os-checkmk-agent.pkg https://gitlab.thatsallmine.de/api/v4/projects/76/packages/generic/os-checkmk-agent/1.0-rc5/os-checkmk-agent-1.0-opnsense26.7.pkg
 sha256 /tmp/os-checkmk-agent.pkg      # compare with SHA256SUMS of the release
 pkg add /tmp/os-checkmk-agent.pkg
 rm /tmp/os-checkmk-agent.pkg
@@ -155,20 +150,6 @@ How the secret is handled:
   by root only (directory `0700`, file `0600`). It is passed to `openssl` through
   a file descriptor, never on a command line.
 
-## Host labels
-
-The plugin adds a small agent plugin that sends two host labels:
-
-```
-opnsense:yes
-opnsense/version:26.7
-```
-
-Checkmk shows them on the host after the service discovery. Use them in rule
-conditions to target all OPNsense firewalls, or one OPNsense version. The agent
-itself still reports `AgentOS: freebsd`, so rules for FreeBSD hosts keep
-applying.
-
 ## Query over SSH
 
 Instead of TCP port 6556, Checkmk can also run the agent over SSH. This needs no
@@ -203,21 +184,26 @@ you also want port 6556.
 
 ## Own agent plugins and local checks
 
-The plugin ships three small agent plugins, evaluated by Checkmk's built-in
-checks: host labels, *SSH daemon configuration* (`sshd -T` of OPNsense's SSH
-daemon) and *Logins* (number of logged-in users). To leave out a service you do
-not need, disable it in Checkmk (rule *Disabled services*, or on the service
-discovery page) – centrally for all firewalls, no setting on OPNsense needed.
-
-The agent runs executable files from:
+The plugin itself delivers the stock agent output. The agent runs executable
+files from:
 
 - `/usr/local/lib/check_mk_agent/plugins/` (agent plugins)
 - `/usr/local/lib/check_mk_agent/local/` (local checks)
 
 OPNsense firmware updates and plugin updates leave your own files there alone.
 They are not part of `config.xml`, though: after a fresh install of the firewall,
-copy them back from your own backup. The host labels plugin belongs to this
-package and comes back automatically when the plugin is installed.
+copy them back from your own backup.
+
+**Optional extras:** [`extras/agent-plugins/`](extras/agent-plugins/) has three
+small agent plugins for OPNsense, evaluated by Checkmk's built-in checks or
+rules: host labels (`opnsense`, `opnsense/version`), *SSH daemon configuration*
+(`sshd -T` of OPNsense's SSH daemon) and *Logins*. Copy the ones you want to
+`/usr/local/lib/check_mk_agent/plugins/` and make them executable. They are not
+part of the OPNsense plugin.
+
+To leave out a service you do not need, disable it in Checkmk (rule *Disabled
+services*, or on the service discovery page) – centrally for all firewalls, no
+setting on OPNsense needed.
 
 ## Updates
 
@@ -250,8 +236,9 @@ the same firewall, is in [docs/COMPARISON.md](docs/COMPARISON.md).
 | Network interfaces (traffic, errors) | ✔ | ➕ `interfaces/overview`, `diagnostics/interface` |
 | Processes, threads, TCP connections, kernel counters | ✔ | – |
 | NTP | ✔ | ➕ `ntpd/service` |
-| SSH daemon configuration, logins | ✔ | – |
-| Host labels, own agent plugins and local checks | ✔ | – |
+| SSH daemon configuration, logins | ✔ (optional extras) | – |
+| Host labels | ✔ (optional extras) | – |
+| Own agent plugins and local checks | ✔ | – |
 | Firmware version, pending updates | – | ✔ `core/firmware/status` |
 | OPNsense services | – | ✔ `core/service/search` |
 | SMART (with os-smart) | – | ✔ `smart/service` |
@@ -270,9 +257,13 @@ not part of it today.
 
 ## Uninstalling
 
-Remove the plugin under *System › Firmware › Plugins*. The agent is stopped and
-the stored secret file is deleted. Remove the firewall rule for port 6556 as
-well.
+Remove the plugin under *System › Firmware › Plugins* and the firewall rule for
+port 6556. Until the next reboot the port stays open, but returns no data (the
+agent wrapper is gone with the package). The stored secret remains in
+`/usr/local/etc/checkmkagent/` and in `config.xml`; delete the directory if you
+do not reinstall the plugin.
+
+After reinstalling, click **Apply** once (or reboot) to start the agent again.
 
 ## Building from source
 
