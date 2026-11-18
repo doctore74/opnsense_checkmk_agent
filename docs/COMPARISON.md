@@ -96,8 +96,9 @@ Both queried at the same time from fresh Checkmk 2.5.0p19 sites, same OPNsense
 Why the agent is the better fit for a firewall:
 
 - **Security:** SNMPv2c sends the community string and all data in plain text;
-  SNMPv3 needs extra users and settings on both sides. The agent is reached only
-  through a firewall rule and can encrypt its output (or run over SSH).
+  SNMPv3 needs extra users and settings on both sides. The agent listens on
+  loopback by default, is reached only through the chosen listen address and a
+  firewall rule, and can encrypt its output (or run over SSH).
 - **Fewer moving parts:** one TCP connection per check interval returns all data;
   SNMP walks many tables over UDP.
 - **Built-in checks:** the agent's sections are evaluated by Checkmk's own checks

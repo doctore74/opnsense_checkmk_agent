@@ -7,7 +7,8 @@ processes, uptime, NTP and more.
 
 The plugin is a switch in the OPNsense GUI around two packages from the OPNsense
 repository: `check_mk_agent` (the Checkmk agent for FreeBSD) and `socat` (makes
-it reachable on TCP port 6556). It adds optional symmetric encryption and
+it reachable over TCP, port 6556 by default). It adds a listen address and port,
+optional symmetric encryption, configuration sync for high availability and
 nothing else: the agent output stays exactly as the port delivers it.
 
 > **Tip:** combine it with the Checkmk API agent
@@ -29,6 +30,7 @@ nothing else: the agent output stays exactly as the port delivers it.
 - [Manual installation](#manual-installation)
 - [Encryption](#encryption)
 - [Query over SSH](#query-over-ssh)
+- [High availability](#high-availability)
 - [Own agent plugins and local checks](#own-agent-plugins-and-local-checks)
 - [Updates](#updates)
 - [OPNsense data from the REST API](#opnsense-data-from-the-rest-api)
@@ -47,7 +49,7 @@ flowchart LR
         CFG[("config.xml")]
         RC["rc.d checkmkagent"]
         FW["Firewall rule<br/>TCP 6556"]
-        SOCAT["socat<br/>TCP 6556, IPv4 + IPv6"]
+        SOCAT["socat<br/>listen address + port<br/>default 127.0.0.1:6556"]
         WRAP["agent wrapper<br/>optional encryption"]
         AGENT["check_mk_agent<br/>+ own plugins / local checks"]
         API["OPNsense REST API"]
@@ -78,25 +80,35 @@ agent provides:
 
 | Component | Version | Result |
 |---|---|---|
-| OPNsense 26.7 | 26.7 (FreeBSD 15.1), `check_mk_agent` 2.5.0p15, `socat` 1.8.1.3 | fresh install from the release, settings and apply via GUI/API, IPv4/IPv6, encryption, SSH, reboot, upgrade, uninstall: OK (2026-11-16) |
-| OPNsense 26.1 | 26.1.11_10 (FreeBSD 14.3), `check_mk_agent` 2.4.0p20, `socat` 1.8.1.1 | install from the release, enable/disable, encryption, reinstall while running, queried by Checkmk 2.5.0p19 in production: OK (2026-11-16, long-term test running) |
-| Checkmk 2.4 | `checkmk/check-mk-cloud:2.4.0p41` | encrypted query and service discovery (25 services): OK (2026-11-16) |
-| Checkmk 2.5 | `checkmk/check-mk-ultimate:2.5.0p20` | encrypted query with encryption enforced, plain text refused, service discovery (25 services): OK (2026-11-16) |
-| Checkmk 3.0 | `checkmk/check-mk-ultimate:3.0.0-2026.11.16` (daily) | encrypted query and service discovery (25 services): OK (2026-11-16) |
+| OPNsense 26.7 | 26.7.9 (FreeBSD 15.1), `check_mk_agent` 2.5.0p15, `socat` 1.8.1.3 | fresh install, settings and apply via GUI/API, listen address (loopback, `::`, IPv4, IPv6, CARP address) and port, encryption, SSH, reboot, upgrade of an existing configuration, uninstall; HA pair: configuration sync and CARP failover: OK (2026-11-18) |
+| OPNsense 26.1 | 26.1.11_10 (FreeBSD 14.3), `check_mk_agent` 2.4.0p20, `socat` 1.8.1.1 | upgrade of an existing configuration, listen address `::` and loopback, encryption, reboot, queried by Checkmk 2.5.0p19 in production: OK (2026-11-18, long-term test running) |
+| Checkmk 2.4 | `checkmk/check-mk-cloud:2.4.0p41` | encrypted query: OK (2026-11-18); service discovery (25 services): OK (2026-11-16) |
+| Checkmk 2.5 | `checkmk/check-mk-ultimate:2.5.0p20` | encrypted query: OK (2026-11-18); encryption enforced, plain text refused, service discovery (25 services): OK (2026-11-16) |
+| Checkmk 3.0 | `checkmk/check-mk-ultimate:3.0.0-2026.11.16` (daily) | encrypted query: OK (2026-11-18); service discovery (25 services): OK (2026-11-16) |
+
+The tests of 2026-11-18 cover the current source in `net-mgmt/checkmk-agent/`
+(listen address, port, HA sync). The release 1.0-rc5 still listens on all
+addresses on port 6556 and has no address and port fields.
 
 ## Setup
 
 1. Install the plugin under *System › Firmware › Plugins* (`os-checkmk-agent`).
    `check_mk_agent` and `socat` are installed with it. As long as the plugin is
    not in the official list, see [Manual installation](#manual-installation).
-2. *Services › Checkmk Agent*: check **Enable** and click **Apply**.
+2. *Services › Checkmk Agent*: check **Enable**, set the **Listen address** and
+   click **Apply**. The default `127.0.0.1` accepts local queries only (for
+   example [over SSH](#query-over-ssh)). For queries over the network, enter the
+   firewall's address towards the Checkmk server, `0.0.0.0` (all IPv4
+   addresses) or `::` (all IPv4 and IPv6 addresses). The **Listen port** is
+   6556, the port Checkmk queries by default.
 3. *Firewall › Rules*, on the interface the Checkmk server comes from: allow
-   TCP to port 6556 on *This Firewall*, with the Checkmk server as source.
+   TCP to the listen port on *This Firewall*, with the Checkmk server as source.
 4. In Checkmk, add the firewall as a host with "Checkmk agent (Server)" and run
    the service discovery.
 
-The plugin never opens the port itself. Who may query the agent is decided only
-by the firewall rule, so restrict the source to your Checkmk server.
+The plugin never opens the port in the firewall itself. Who may query the agent
+is decided by the listen address and the firewall rule, so restrict the source
+to your Checkmk server.
 
 ## Manual installation
 
@@ -176,11 +188,22 @@ Thanks to `command=`, the key runs only the agent: any other command still
 returns the agent output, and port forwarding is refused (tested on 26.7). The
 agent then runs as the user `checkmk` instead of root and delivers the same
 sections.
+The agent service of the plugin is not needed for this: SSH runs the agent
+directly, whatever the listen address is.
 Over SSH the transport is encrypted by SSH itself, so point `command=` to
 `/usr/local/bin/check_mk_agent` as shown. The *Encryption* setting of the plugin
 applies to port 6556 only; Checkmk reads the plain SSH output even with an
 encryption rule for the host (tested with 2.5.0p19). Enable the plugin's agent service only if
 you also want port 6556.
+
+## High availability
+
+In an HA pair, select *Checkmk Agent* under *System › High Availability ›
+Settings* to synchronize the settings, including the secret, to the backup node.
+As both nodes get the same listen address, use `::`, `0.0.0.0` or a CARP
+address: both nodes listen on a CARP address, and the query reaches the node
+that is master. A fixed address of only one node does not exist on the other,
+so the agent would not start there.
 
 ## Own agent plugins and local checks
 
@@ -260,7 +283,7 @@ not part of it today.
 ## Uninstalling
 
 Remove the plugin under *System › Firmware › Plugins* and the firewall rule for
-port 6556. Until the next reboot the port stays open, but returns no data (the
+the listen port. Until the next reboot the port stays open, but returns no data (the
 agent wrapper is gone with the package). The stored secret remains in
 `/usr/local/etc/checkmkagent/` and in `config.xml`; delete the directory if you
 do not reinstall the plugin.
