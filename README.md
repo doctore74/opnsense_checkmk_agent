@@ -86,9 +86,7 @@ agent provides:
 | Checkmk 2.5 | `checkmk/check-mk-ultimate:2.5.0p20` | encrypted query: OK (2026-11-18); encryption enforced, plain text refused, service discovery (25 services): OK (2026-11-16) |
 | Checkmk 3.0 | `checkmk/check-mk-ultimate:3.0.0-2026.11.16` (daily) | encrypted query: OK (2026-11-18); service discovery (25 services): OK (2026-11-16) |
 
-The tests of 2026-11-18 cover the current source in `net-mgmt/checkmk-agent/`
-(listen address, port, HA sync). The release 1.0-rc5 still listens on all
-addresses on port 6556 and has no address and port fields.
+The tests of 2026-11-18 were run with the packages of release 1.0-rc6.
 
 ## Setup
 
@@ -121,8 +119,8 @@ firewall (console or SSH, option 8 "Shell"):
 # dependencies from the OPNsense repository
 pkg install -y check_mk_agent socat
 
-# the plugin (example: 1.0-rc5 for OPNsense 26.7)
-fetch -o /tmp/os-checkmk-agent.pkg https://gitlab.thatsallmine.de/api/v4/projects/76/packages/generic/os-checkmk-agent/1.0-rc5/os-checkmk-agent-1.0-opnsense26.7.pkg
+# the plugin (example: 1.0-rc6 for OPNsense 26.7)
+fetch -o /tmp/os-checkmk-agent.pkg https://gitlab.thatsallmine.de/api/v4/projects/76/packages/generic/os-checkmk-agent/1.0-rc6/os-checkmk-agent-1.0-opnsense26.7.pkg
 sha256 /tmp/os-checkmk-agent.pkg      # compare with SHA256SUMS of the release
 pkg add /tmp/os-checkmk-agent.pkg
 rm /tmp/os-checkmk-agent.pkg

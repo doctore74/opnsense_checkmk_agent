@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Test build 1.0-rc6 (2026-11-18) contains the changes below.
+
 ### Changed
 
 - After the upstream review: the plugin keeps the agent output stock (no bundled
